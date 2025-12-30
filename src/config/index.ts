@@ -1,0 +1,17 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
+/**
+ * Application-level configuration
+ * Values are loaded from .env with safe fallbacks
+ */
+
+export const PORT: number =
+  process.env.PORT ? parseInt(process.env.PORT, 10) : 5050;
+
+export const MONGODB_URI: string =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/room_rental";
+
+export const JWT_SECRET: string =
+  process.env.JWT_SECRET || "mero_secret";
