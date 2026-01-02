@@ -2,11 +2,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-/**
- * Application-level configuration
- * Values are loaded from .env with safe fallbacks
- */
-
 export const PORT: number =
   process.env.PORT ? parseInt(process.env.PORT, 10) : 5050;
 
