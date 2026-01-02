@@ -9,13 +9,12 @@ let userRepository = new UserRepository();
 
 export class UserService {
     async createUser(data: CreateUserDTO){
-        // business logic before creating user
         const emailCheck = await userRepository.getUserByEmail(data.email);
         if(emailCheck){
             throw new HttpError(403, "Email already in use");
         }
         // hash password
-        const hashedPassword = await bcryptjs.hash(data.password, 10); // 10 - complexity
+        const hashedPassword = await bcryptjs.hash(data.password, 10); 
         data.password = hashedPassword;
 
         // create user
@@ -35,12 +34,12 @@ export class UserService {
             throw new HttpError(401, "Invalid credentials");
         }
         // generate jwt
-        const payload = { // user identifier
+        const payload = { 
             id: user._id,
             email: user.email,
             role: user.role
         }
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }); // 30 days
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }); 
         return { token, user }
     }
 }
