@@ -71,7 +71,6 @@ export class AuthController {
   // Update profile picture after signup
   async updateProfilePicture(req: Request, res: Response) {
     try {
-      // req.user is set by authorizedMiddleware
       if (!req.user) {
         return res.status(401).json({ success: false, message: "Unauthorized" });
       }

@@ -5,7 +5,6 @@ import { IUser } from "../models/user.model";
 import { JWT_SECRET } from "../config/index";
 import { HttpError } from "../errors/http-error";
 
-// Extend Express Request to include `user`
 declare global {
   namespace Express {
     interface Request {
@@ -16,9 +15,6 @@ declare global {
 
 const userRepository = new UserRepository();
 
-/**
- * Protect routes - requires valid JWT
- */
 export const authorizedMiddleware = async (
   req: Request,
   res: Response,
@@ -56,13 +52,6 @@ export const authorizedMiddleware = async (
   }
 };
 
-/**
- * Restrict access by role
- * Example usage:
- *   authorizeRoles("owner") → only owners
- *   authorizeRoles("renter") → only renters
- *   authorizeRoles("owner", "renter") → both
- */
 export const authorizeRoles = (...roles: ("renter" | "owner")[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {

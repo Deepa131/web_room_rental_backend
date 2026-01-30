@@ -4,14 +4,8 @@ import fs from "fs";
 import AddRoom from "../models/add.room.model";
 import { RoomTypeModel } from "../models/room.type.model";
 
-/**
- * Helper: Validate ObjectId
- */
 const isValidObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id);
 
-/**
- * Create a new room
- */
 export const createRoom = async (req: Request, res: Response) => {
   try {
     const {
@@ -28,8 +22,6 @@ export const createRoom = async (req: Request, res: Response) => {
     if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const ownerId = req.user._id;
-
-    // Validate required fields
     if (!roomTitle || !monthlyPrice || !location || !roomType) {
       return res.status(400).json({
         success: false,
@@ -38,7 +30,6 @@ export const createRoom = async (req: Request, res: Response) => {
       });
     }
 
-    // Handle roomType - accept ObjectId or typeName
     let roomTypeId = roomType;
     if (!isValidObjectId(roomType)) {
       const foundRoomType = await RoomTypeModel.findOne({ typeName: roomType });
@@ -69,9 +60,6 @@ export const createRoom = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Get all rooms (with pagination & filters)
- */
 export const getAllRooms = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -105,9 +93,6 @@ export const getAllRooms = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Get single room by ID
- */
 export const getRoomById = async (req: Request, res: Response) => {
   try {
     const room = await AddRoom.findById(req.params.id)
@@ -122,9 +107,6 @@ export const getRoomById = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Get rooms by owner
- */
 export const getRoomsByOwner = async (req: Request, res: Response) => {
   try {
     const rooms = await AddRoom.find({ ownerId: req.params.ownerId })
@@ -141,9 +123,6 @@ export const getRoomsByOwner = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Update room
- */
 export const updateRoom = async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -167,9 +146,6 @@ export const updateRoom = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Delete room
- */
 export const deleteRoom = async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -197,9 +173,6 @@ export const deleteRoom = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Upload room image
- */
 export const uploadRoomImage = async (req: Request, res: Response) => {
   try {
     if (!req.file) return res.status(400).json({ message: "Please upload an image file" });
@@ -214,9 +187,6 @@ export const uploadRoomImage = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Upload room video
- */
 export const uploadRoomVideo = async (req: Request, res: Response) => {
   try {
     if (!req.file) return res.status(400).json({ message: "Please upload a video file" });

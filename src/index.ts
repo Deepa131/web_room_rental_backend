@@ -20,8 +20,6 @@ connectDatabase();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ---------------- CUSTOM SANITIZATION ---------------- */
-
 app.use((req: Request, res: Response, next: NextFunction) => {
   const skipFields = [
     "email",
@@ -85,8 +83,6 @@ app.use("/api/rooms", addRoomRoutes);
 
 // Room Types
 app.use("/api/roomTypes", roomTypeRoutes);
-
-/* ---------------- SERVER ---------------- */
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
 
