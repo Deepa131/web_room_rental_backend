@@ -13,11 +13,8 @@ export class UserService {
         if(emailCheck){
             throw new HttpError(403, "Email already in use");
         }
-        // hash password
-        const hashedPassword = await bcryptjs.hash(data.password, 10); 
-        data.password = hashedPassword;
-
-        // create user
+        
+        // Password will be hashed by the pre-save hook in the model
         const newUser = await userRepository.createUser(data);
         return newUser;
     }
@@ -42,4 +39,14 @@ export class UserService {
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }); 
         return { token, user }
     }
+
+    async updateProfilePicture(userId: string, profilePicture: string) {
+        const updatedUser = await userRepository.updateUser(userId, { profilePicture });
+        if (!updatedUser) {
+            throw new HttpError(404, "User not found");
+        }
+        const { password, ...safeUser } = updatedUser.toObject();
+        return safeUser;
+    } 
+
 }
