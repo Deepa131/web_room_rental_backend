@@ -73,3 +73,24 @@ export const authorizeRoles = (...roles: ("renter" | "owner")[]) => {
     }
   };
 };
+
+// Admin middleware - checks if user is admin (role = "owner")
+export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new HttpError(401, "Unauthorized: User missing");
+
+    if (req.user.role !== "owner") {
+      throw new HttpError(
+        403,
+        `Forbidden: Only admins can access this resource`
+      );
+    }
+
+    next();
+  } catch (error: any) {
+    return res.status(error.statusCode || 403).json({
+      success: false,
+      message: error.message || "Forbidden",
+    });
+  }
+};

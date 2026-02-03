@@ -68,30 +68,85 @@ export class AuthController {
     }
   }
 
-  // Update profile picture after signup
   async updateProfilePicture(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Profile picture is required",
+      });
+    }
+
+    // Normalize the file path for URL usage
+    // Remove 'public' and convert backslashes to forward slashes
+    let filePath = req.file.path
+      .replace(/\\/g, '/') // Convert Windows backslashes to forward slashes
+      .replace('public/', '/'); // Remove 'public/' from the beginning
+    
+    console.log('Normalized file path:', filePath);
+
+    const updatedUser = await userService.updateProfilePicture(
+      req.user._id.toString(),
+      filePath
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture updated",
+      data: updatedUser,
+    });
+  } catch (error: any) {
+    return res.status(error.statusCode ?? 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+}
+
+  // Update user profile by ID (user can update their own profile)
+  async updateUserProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({ success: false, message: "Unauthorized" });
       }
 
-      const { profilePicture } = req.body;
-      if (!profilePicture) {
-        return res.status(400).json({
+      const { id } = req.params;
+
+      // Check if user is updating their own profile
+      if (req.user._id.toString() !== id) {
+        return res.status(403).json({
           success: false,
-          message: "Profile picture is required",
+          message: "Forbidden: You can only update your own profile",
         });
       }
 
-      const updatedUser = await userService.updateProfilePicture(
-        req.user._id.toString(),
-        profilePicture
-      );
+      const updateData = req.body;
+
+      // Add profile picture if file is uploaded
+      if (req.file) {
+        updateData.profilePicture = req.file.path;
+      }
+
+      const updatedUser = await userService.updateUserData(id, updateData);
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Remove password from response
+      const { password, ...safeUser } = updatedUser.toObject();
 
       return res.status(200).json({
         success: true,
-        message: "Profile picture updated",
-        data: updatedUser,
+        message: "User profile updated successfully",
+        data: safeUser,
       });
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({

@@ -47,6 +47,38 @@ export class UserService {
         }
         const { password, ...safeUser } = updatedUser.toObject();
         return safeUser;
-    } 
+    }
 
+    // Get all users
+    async getAllUsers() {
+        const users = await userRepository.getAllUsers();
+        return users;
+    }
+
+    // Get user by ID
+    async getUserById(id: string) {
+        const user = await userRepository.getUserById(id);
+        if (!user) {
+            throw new HttpError(404, "User not found");
+        }
+        return user;
+    }
+
+    // Update user data
+    async updateUserData(id: string, updateData: Partial<CreateUserDTO>) {
+        const updatedUser = await userRepository.updateUser(id, updateData);
+        if (!updatedUser) {
+            throw new HttpError(404, "User not found");
+        }
+        return updatedUser;
+    }
+
+    // Delete user
+    async deleteUser(id: string) {
+        const result = await userRepository.deleteUser(id);
+        if (!result) {
+            throw new HttpError(404, "User not found");
+        }
+        return result;
+    }
 }

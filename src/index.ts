@@ -7,6 +7,7 @@ import { connectDatabase } from "./database/mongodb";
 
 // Route imports
 import authRouter from "./routes/auth.route";
+import adminRouter from "./routes/admin.route";
 import roomTypeRoutes from "./routes/room.type.route";
 import addRoomRoutes from "./routes/add.room.route";
 
@@ -59,7 +60,7 @@ const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(",")
-      : [];
+      : ["http://localhost:3000", "http://localhost:3001", "http://localhost:5173"];
 
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -74,9 +75,11 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions));
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(process.cwd(), "public")));
 
 // Users
-app.use("/api/users", authRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/admin", adminRouter);
 
 // Rooms
 app.use("/api/rooms", addRoomRoutes);

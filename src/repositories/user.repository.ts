@@ -6,7 +6,7 @@ export interface IUserRepository {
     getUserById(id: string): Promise<IUser | null>;
     getAllUsers(): Promise<IUser[]>;
     updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
-    deleteUser(id: string): Promise<boolean>;
+    deleteUser(id: string): Promise<IUser | null>;
 }
 export class UserRepository implements IUserRepository {
     async createUser(userData: Partial<IUser>): Promise<IUser> {
@@ -31,8 +31,8 @@ export class UserRepository implements IUserRepository {
         );
         return updatedUser;
     }
-    async deleteUser(id: string): Promise<boolean> {
-        const result = await UserModel.findByIdAndDelete(id);
-        return result ? true : false;
+    async deleteUser(id: string): Promise<IUser | null> {
+        const deletedUser = await UserModel.findByIdAndDelete(id);
+        return deletedUser;
     }
 }
