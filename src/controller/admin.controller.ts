@@ -1,9 +1,9 @@
-import { UserService } from "../services/user.service";
+import { AdminService } from "../services/admin.service";
 import { CreateUserDTO } from "../dtos/user.dto";
 import { Request, Response } from "express";
 import z from "zod";
 
-const userService = new UserService();
+const adminService = new AdminService();
 
 export class AdminController {
   // Create new user (admin only)
@@ -27,7 +27,7 @@ export class AdminController {
         userData.profilePicture = filePath;
       }
 
-      const newUser = await userService.createUser(userData);
+      const newUser = await adminService.createUser(userData);
 
       // Remove password from response
       const { password, ...safeUser } = newUser.toObject();
@@ -48,7 +48,7 @@ export class AdminController {
   // Get all users (admin only)
   async getAllUsers(req: Request, res: Response) {
     try {
-      const users = await userService.getAllUsers();
+      const users = await adminService.getAllUsers();
 
       // Remove passwords from all users
       const safeUsers = users.map((user) => {
@@ -74,7 +74,7 @@ export class AdminController {
     try {
       const { id } = req.params;
 
-      const user = await userService.getUserById(id);
+      const user = await adminService.getUserById(id);
 
       if (!user) {
         return res.status(404).json({
@@ -111,9 +111,12 @@ export class AdminController {
           .replace(/\\/g, "/")
           .replace("public/", "/");
         updateData.profilePicture = filePath;
+      } else if (updateData.profilePicture === "null") {
+        // Remove profile picture if "null" is sent
+        updateData.profilePicture = "default-profile.png";
       }
 
-      const updatedUser = await userService.updateUserData(id, updateData);
+      const updatedUser = await adminService.updateUser(id, updateData);
 
       if (!updatedUser) {
         return res.status(404).json({
@@ -143,7 +146,7 @@ export class AdminController {
     try {
       const { id } = req.params;
 
-      const deletedUser = await userService.deleteUser(id);
+      const deletedUser = await adminService.deleteUser(id);
 
       if (!deletedUser) {
         return res.status(404).json({

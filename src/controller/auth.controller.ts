@@ -86,8 +86,6 @@ export class AuthController {
     let filePath = req.file.path
       .replace(/\\/g, '/') // Convert Windows backslashes to forward slashes
       .replace('public/', '/'); // Remove 'public/' from the beginning
-    
-    console.log('Normalized file path:', filePath);
 
     const updatedUser = await userService.updateProfilePicture(
       req.user._id.toString(),
@@ -128,7 +126,16 @@ export class AuthController {
 
       // Add profile picture if file is uploaded
       if (req.file) {
-        updateData.profilePicture = req.file.path;
+        // Normalize the file path for URL usage
+        // Remove 'public' and convert backslashes to forward slashes
+        let filePath = req.file.path
+          .replace(/\\/g, '/') // Convert Windows backslashes to forward slashes
+          .replace('public/', '/'); // Remove 'public/' from the beginning
+        
+        updateData.profilePicture = filePath;
+      } else if (updateData.profilePicture === "null") {
+        // Remove profile picture if "null" is sent
+        updateData.profilePicture = "default-profile.png";
       }
 
       const updatedUser = await userService.updateUserData(id, updateData);
