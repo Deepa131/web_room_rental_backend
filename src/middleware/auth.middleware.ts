@@ -52,12 +52,12 @@ export const authorizedMiddleware = async (
   }
 };
 
-export const authorizeRoles = (...roles: ("renter" | "owner")[]) => {
+export const authorizeRoles = (...roles: ("renter" | "owner" | "admin")[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user) throw new HttpError(401, "Unauthorized: User missing");
 
-      if (!roles.includes(req.user.role)) {
+      if (!roles.includes(req.user.role as "renter" | "owner" | "admin")) {
         throw new HttpError(
           403,
           `Forbidden: Role '${req.user.role}' not authorized`
@@ -74,12 +74,12 @@ export const authorizeRoles = (...roles: ("renter" | "owner")[]) => {
   };
 };
 
-// Admin middleware - checks if user is admin (role = "owner")
+// Admin middleware - checks if user is admin (role = "admin")
 export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) throw new HttpError(401, "Unauthorized: User missing");
 
-    if (req.user.role !== "owner") {
+    if (req.user.role !== "admin") {
       throw new HttpError(
         403,
         `Forbidden: Only admins can access this resource`
