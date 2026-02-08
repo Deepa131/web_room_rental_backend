@@ -8,6 +8,8 @@ const router = Router();
 
 router.post("/register", authController.register)
 router.post("/login", authController.login)
+router.post("/forgot-password", authController.forgotPassword)
+router.post("/reset-password/:token", authController.resetPassword)
 router.put("/profile-picture", authorizedMiddleware, uploadImage.single("profilePicture"), authController.updateProfilePicture);
 router.put("/:id", authorizedMiddleware, uploadImage.single("profilePicture"), authController.updateUserProfile);
 
