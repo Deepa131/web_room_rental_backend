@@ -7,6 +7,8 @@ export interface IUser extends UserType, Document {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
 
   getSignedJwtToken(): string;
   matchPassword(enteredPassword: string): Promise<boolean>;
@@ -41,6 +43,13 @@ const UserSchema: Schema<IUser> = new Schema(
     profilePicture: {
       type: String,
       default: "default-profile.png",
+    },
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
+    resetPasswordExpire: {
+      type: Date,
     },
   },
   { timestamps: true }
