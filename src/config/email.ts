@@ -1,10 +1,13 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
-const EMAIL_PASS = process.env.EMAIL_PASS as string; 
-const EMAIL_USER = process.env.EMAIL_USER as string;
+dotenv.config();
+
+const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "").trim();
+const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
 
 export const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASS,
@@ -12,6 +15,9 @@ export const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
+    if (!EMAIL_USER || !EMAIL_PASS) {
+        throw new Error("Email credentials missing. Check EMAIL_USER and EMAIL_PASS.");
+    }
     const mailOptions = {
         from: `Mero app <${EMAIL_USER}>`,
         to,

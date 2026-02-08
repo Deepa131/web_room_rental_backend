@@ -10,3 +10,14 @@ export const MONGODB_URI: string =
 
 export const JWT_SECRET: string =
   process.env.JWT_SECRET || "mero_secret";
+
+export const FRONTEND_URL: string =
+  process.env.FRONTEND_URL || "http://localhost:3000";
+
+export const RESET_PASSWORD_URL: string =
+  process.env.RESET_PASSWORD_URL || "";
+
+export const RESET_PASSWORD_EXPIRE_MINUTES: number =
+  process.env.RESET_PASSWORD_EXPIRE_MINUTES
+    ? parseInt(process.env.RESET_PASSWORD_EXPIRE_MINUTES, 10)
+    : 60;
