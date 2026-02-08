@@ -1,5 +1,10 @@
 import { UserService } from "../services/user.service";
-import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
+import {
+  CreateUserDTO,
+  ForgotPasswordDTO,
+  LoginUserDTO,
+  ResetPasswordDTO,
+} from "../dtos/user.dto";
 import { Request, Response } from "express";
 import z from "zod";
 
@@ -156,6 +161,66 @@ export class AuthController {
         data: safeUser,
       });
     } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const parsedData = ForgotPasswordDTO.safeParse(req.body);
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          message: z.prettifyError(parsedData.error),
+        });
+      }
+
+      const { email } = parsedData.data;
+      const result = await userService.requestPasswordReset(email);
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error: any) {
+      console.error("Forgot password error:", error);
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const { token } = req.params;
+      if (!token) {
+        return res.status(400).json({
+          success: false,
+          message: "Reset token is required",
+        });
+      }
+
+      const parsedData = ResetPasswordDTO.safeParse(req.body);
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          message: z.prettifyError(parsedData.error),
+        });
+      }
+
+      const { password } = parsedData.data;
+      await userService.resetPassword(token, password);
+
+      return res.status(200).json({
+        success: true,
+        message: "Password reset successful",
+      });
+    } catch (error: any) {
+      console.error("Reset password error:", error);
       return res.status(error.statusCode ?? 500).json({
         success: false,
         message: error.message || "Internal Server Error",

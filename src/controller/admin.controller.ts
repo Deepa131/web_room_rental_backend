@@ -48,7 +48,27 @@ export class AdminController {
   // Get all users (admin only)
   async getAllUsers(req: Request, res: Response) {
     try {
-      const users = await adminService.getAllUsers();
+      const page = req.query.page ? Number(req.query.page) : 1;
+      const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+      if (!Number.isInteger(page) || page < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Page must be a positive integer",
+        });
+      }
+
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Limit must be an integer between 1 and 100",
+        });
+      }
+
+      const { users, total, totalPages } = await adminService.getAllUsers(
+        page,
+        limit
+      );
 
       // Remove passwords from all users
       const safeUsers = users.map((user) => {
@@ -60,6 +80,12 @@ export class AdminController {
         success: true,
         message: "Users retrieved successfully",
         data: safeUsers,
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
       });
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({
