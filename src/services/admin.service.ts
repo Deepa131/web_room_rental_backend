@@ -18,9 +18,10 @@ export class AdminService {
   }
 
   // Get all users (admin only)
-  async getAllUsers() {
-    const users = await userRepository.getAllUsers();
-    return users;
+  async getAllUsers(page: number, limit: number) {
+    const { users, total } = await userRepository.getUsersPaginated(page, limit);
+    const totalPages = Math.ceil(total / limit) || 1;
+    return { users, total, totalPages, page, limit };
   }
 
   // Get single user by ID (admin only)

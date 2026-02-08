@@ -3,7 +3,14 @@ import { UserRepository } from "../repositories/user.repository";
 import bcryptjs from "bcryptjs";
 import { HttpError } from "../errors/http-error";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config";
+import crypto from "crypto";
+import { sendEmail } from "../config/email";
+import {
+    FRONTEND_URL,
+    JWT_SECRET,
+    RESET_PASSWORD_EXPIRE_MINUTES,
+    RESET_PASSWORD_URL,
+} from "../config";
 
 const userRepository = new UserRepository();
 
@@ -62,5 +69,55 @@ export class UserService {
             throw new HttpError(404, "User not found");
         }
         return updatedUser;
+    }
+
+    async requestPasswordReset(email: string) {
+        const user = await userRepository.getUserByEmail(email);
+        if (!user) {
+            throw new HttpError(404, "User not found");
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetTokenHash = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+
+        user.resetPasswordToken = resetTokenHash;
+        user.resetPasswordExpire = new Date(
+            Date.now() + RESET_PASSWORD_EXPIRE_MINUTES * 60 * 1000
+        );
+
+        await user.save({ validateBeforeSave: false });
+
+        const baseUrl = RESET_PASSWORD_URL || `${FRONTEND_URL}/reset-password`;
+        const resetLink = `${baseUrl}/${resetToken}`;
+
+        const html = `
+            <p>You requested a password reset.</p>
+            <p>Click the link below to reset your password:</p>
+            <p><a href="${resetLink}">Reset Password</a></p>
+            <p>If you did not request this, please ignore this email.</p>
+        `;
+
+        await sendEmail(user.email, "Reset your password", html);
+
+        return { message: "Password reset email sent" };
+    }
+
+    async resetPassword(token: string, newPassword: string) {
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await userRepository.getUserByResetToken(tokenHash);
+        if (!user) {
+            throw new HttpError(400, "Invalid or expired token");
+        }
+
+        user.password = newPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+        return user;
     }
 }
