@@ -6,6 +6,11 @@ export interface IAddRoom extends Document {
   roomTitle: string;
   monthlyPrice: number;
   location: string;
+  locationCoords?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
   roomType: mongoose.Types.ObjectId;
   description?: string;
   images: string[];
@@ -42,6 +47,18 @@ const addRoomSchema = new Schema<IAddRoom>(
       required: [true, "Location is required"],
       trim: true,
     },
+    locationCoords: {
+      latitude: {
+        type: Number,
+      },
+      longitude: {
+        type: Number,
+      },
+      address: {
+        type: String,
+        trim: true,
+      },
+    },
     roomType: {
       type: Schema.Types.ObjectId,
       ref: "RoomType",
@@ -69,7 +86,7 @@ const addRoomSchema = new Schema<IAddRoom>(
     },
     approvalStatus: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "archived"],
       default: "pending",
     },
   },
