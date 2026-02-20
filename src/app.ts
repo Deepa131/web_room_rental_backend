@@ -8,6 +8,9 @@ import { HttpError } from './errors/http-error';
 // IMPORT API ROUTES
 import authRoutes from './routes/auth.route';
 import adminRoutes from './routes/admin.route';
+import roomRoutes from './routes/add.room.route';
+import roomTypeRoutes from './routes/room.type.route';
+import { appointmentRouter } from './routes/appointment.route';
 
 dotenv.config();
 // Load environment variables before using them
@@ -16,7 +19,10 @@ console.log(process.env.PORT);
 const app: Application = express();
 
 let corsOptions = {
-    origin: ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:5173'],
+    origin: (origin: any, callback: any) => {
+        // Allow all origins for development
+        callback(null, true);
+    },
     optionsSuccessStatus: 200,
     credentials: true,
 };
@@ -34,6 +40,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // API ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/room-types', roomTypeRoutes);
+app.use('/api/appointments', appointmentRouter);
 
 // Welcome endpoint
 app.get('/', (req: Request, res: Response) => {
