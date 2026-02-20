@@ -86,11 +86,11 @@ export class AuthController {
       });
     }
 
-    // Normalize the file path for URL usage
-    // Remove 'public' and convert backslashes to forward slashes
+    // Construct the URL path for the uploaded file
+    // Files are served via /public, so include that in the path
     let filePath = req.file.path
       .replace(/\\/g, '/') // Convert Windows backslashes to forward slashes
-      .replace('public/', '/'); // Remove 'public/' from the beginning
+      .replace('public/', '/public/'); // Add /public/ to the path
 
     const updatedUser = await userService.updateProfilePicture(
       req.user._id.toString(),
@@ -131,11 +131,11 @@ export class AuthController {
 
       // Add profile picture if file is uploaded
       if (req.file) {
-        // Normalize the file path for URL usage
-        // Remove 'public' and convert backslashes to forward slashes
+        // Construct the URL path for the uploaded file
+        // Files are served via /public, so include that in the path
         let filePath = req.file.path
           .replace(/\\/g, '/') // Convert Windows backslashes to forward slashes
-          .replace('public/', '/'); // Remove 'public/' from the beginning
+          .replace('public/', '/public/'); // Add /public/ to the path
         
         updateData.profilePicture = filePath;
       } else if (updateData.profilePicture === "null") {
