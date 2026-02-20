@@ -13,6 +13,7 @@ export const createRoom = async (req: Request, res: Response) => {
       roomTitle,
       monthlyPrice,
       location,
+      locationCoords,
       roomType,
       description,
       images,
@@ -48,6 +49,7 @@ export const createRoom = async (req: Request, res: Response) => {
       roomTitle,
       monthlyPrice,
       location,
+      locationCoords,
       roomType: roomTypeId,
       description,
       images,
@@ -130,8 +132,8 @@ export const updateRoom = async (req: Request, res: Response) => {
     const room = await AddRoom.findById(req.params.id);
     if (!room) return res.status(404).json({ success: false, message: "Room not found" });
 
-    // Authorization check
-    if (room.ownerId.toString() !== req.user._id.toString()) {
+    // Authorization check (owners can update their own rooms; admins can update any room)
+    if (room.ownerId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Not authorized to update this room" });
     }
 
@@ -195,6 +197,95 @@ export const uploadRoomVideo = async (req: Request, res: Response) => {
       success: true,
       data: req.file.filename,
       message: "Video uploaded successfully",
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
+  }
+};
+
+// Admin-only functions for room management
+export const adminGetAllRooms = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+    if (req.query.approvalStatus) filter.approvalStatus = req.query.approvalStatus;
+    if (req.query.isAvailable !== undefined)
+      filter.isAvailable = req.query.isAvailable === "true";
+    if (req.query.searchText) {
+      filter.$or = [
+        { roomTitle: { $regex: req.query.searchText, $options: "i" } },
+        { location: { $regex: req.query.searchText, $options: "i" } },
+      ];
+    }
+
+    const total = await AddRoom.countDocuments(filter);
+    const rooms = await AddRoom.find(filter)
+      .populate("ownerId", "fullName email")
+      .populate("roomType", "typeName")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      count: rooms.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: rooms,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
+  }
+};
+
+export const adminUpdateRoomStatus = async (req: Request, res: Response) => {
+  try {
+    const { approvalStatus, reason } = req.body;
+
+    if (!["approved", "rejected", "archived"].includes(approvalStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid approval status. Must be 'approved', 'rejected', or 'archived'",
+      });
+    }
+
+    const room = await AddRoom.findById(req.params.id);
+    if (!room) return res.status(404).json({ success: false, message: "Room not found" });
+
+    room.approvalStatus = approvalStatus;
+    await room.save();
+
+    return res.status(200).json({
+      success: true,
+      data: room,
+      message: `Room status updated to ${approvalStatus}`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message || "Server Error" });
+  }
+};
+
+export const adminDeleteRoom = async (req: Request, res: Response) => {
+  try {
+    const room = await AddRoom.findById(req.params.id);
+    if (!room) return res.status(404).json({ success: false, message: "Room not found" });
+
+    // Delete room media files
+    const mediaPaths = [...(room.images || []), ...(room.videos || [])];
+    mediaPaths.forEach((file) => {
+      const fullPath = path.join(__dirname, "../public/uploads", file);
+      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    });
+
+    await AddRoom.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Room deleted successfully by admin",
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message || "Server Error" });
