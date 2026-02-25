@@ -5,9 +5,9 @@ import { HttpError } from "../errors/http-error";
 const userRepository = new UserRepository();
 
 export class AdminService {
-  // Create new user (admin only)
+  // Create new user
   async createUser(data: CreateUserDTO) {
-    const emailCheck = await userRepository.getUserByEmail(data.email);
+    const emailCheck = await userRepository.getUserByEmail(data.email.toLowerCase());
     if (emailCheck) {
       throw new HttpError(403, "Email already in use");
     }
@@ -17,14 +17,14 @@ export class AdminService {
     return newUser;
   }
 
-  // Get all users (admin only)
+  // Get all users
   async getAllUsers(page: number, limit: number) {
     const { users, total } = await userRepository.getUsersPaginated(page, limit);
     const totalPages = Math.ceil(total / limit) || 1;
     return { users, total, totalPages, page, limit };
   }
 
-  // Get single user by ID (admin only)
+  // Get single user by ID 
   async getUserById(id: string) {
     const user = await userRepository.getUserById(id);
     if (!user) {
@@ -33,7 +33,7 @@ export class AdminService {
     return user;
   }
 
-  // Update user data (admin only)
+  // Update user data 
   async updateUser(id: string, updateData: Partial<CreateUserDTO>) {
     const updatedUser = await userRepository.updateUser(id, updateData);
     if (!updatedUser) {
@@ -42,7 +42,7 @@ export class AdminService {
     return updatedUser;
   }
 
-  // Delete user (admin only)
+  // Delete user 
   async deleteUser(id: string) {
     const result = await userRepository.deleteUser(id);
     if (!result) {
