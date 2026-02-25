@@ -16,7 +16,7 @@ export class UserRepository implements IUserRepository {
         return await user.save();
     }
     async getUserByEmail(email: string): Promise<IUser | null> {
-        const user = await UserModel.findOne({ "email": email }).select("+password")
+        const user = await UserModel.findOne({ "email": email.toLowerCase() }).select("+password")
         return user;
     }
     async getUserById(id: string): Promise<IUser | null> {
