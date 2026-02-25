@@ -4,7 +4,6 @@ import { UserRepository } from "../repositories/user.repository";
 import { IUser } from "../models/user.model";
 import { JWT_SECRET } from "../config/index";
 import { HttpError } from "../errors/http-error";
-
 declare global {
   namespace Express {
     interface Request {
@@ -12,9 +11,7 @@ declare global {
     }
   }
 }
-
 const userRepository = new UserRepository();
-
 export const authorizedMiddleware = async (
   req: Request,
   res: Response,
@@ -22,27 +19,20 @@ export const authorizedMiddleware = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw new HttpError(401, "Unauthorized: Header malformed");
     }
-
     const token = authHeader.split(" ")[1];
     if (!token) throw new HttpError(401, "Unauthorized: Token missing");
-
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-
     if (!decoded || !decoded.id) {
       throw new HttpError(401, "Unauthorized: Token invalid");
     }
-
     // Fetch user from DB
     const user = await userRepository.getUserById(decoded.id);
     if (!user) throw new HttpError(401, "Unauthorized: User not found");
-
     req.user = user; // attach user to request
-
     next();
   } catch (error: any) {
     return res.status(error.statusCode || 401).json({
