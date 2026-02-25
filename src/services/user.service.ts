@@ -16,7 +16,7 @@ const userRepository = new UserRepository();
 
 export class UserService {
     async createUser(data: CreateUserDTO) {
-        const emailCheck = await userRepository.getUserByEmail(data.email);
+        const emailCheck = await userRepository.getUserByEmail(data.email.toLowerCase());
         if (emailCheck) {
             throw new HttpError(403, "Email already in use");
         }
@@ -27,7 +27,7 @@ export class UserService {
     }
 
     async loginUser(data: LoginUserDTO) {
-        const user = await userRepository.getUserByEmail(data.email);
+        const user = await userRepository.getUserByEmail(data.email.toLowerCase());
         if (!user) {
             throw new HttpError(404, "User not found");
         }
@@ -72,7 +72,7 @@ export class UserService {
     }
 
     async requestPasswordReset(email: string) {
-        const user = await userRepository.getUserByEmail(email);
+        const user = await userRepository.getUserByEmail(email.toLowerCase());
         if (!user) {
             throw new HttpError(404, "User not found");
         }
