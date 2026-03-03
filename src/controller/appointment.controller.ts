@@ -25,6 +25,14 @@ export class AppointmentController {
                 });
             }
 
+            const room = await AddRoom.findById(roomId);
+            if (!room) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Room not found',
+                });
+            }
+
             // Check if renter already has an appointment for this room
             const existingAppointment = await AppointmentModel.findOne({
                 roomId,
