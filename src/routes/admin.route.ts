@@ -56,6 +56,13 @@ router.delete(
   adminController.deleteUser
 );
 
+router.get(
+  "/stats",
+  authorizedMiddleware,
+  adminMiddleware,
+  adminController.getStats
+);
+
 // ROOM MANAGEMENT
 // GET /api/admin/rooms - Get all rooms with filters (approval status, availability, search)
 router.get(
