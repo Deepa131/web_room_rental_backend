@@ -27,6 +27,12 @@ export const createRoomType = async (req: Request, res: Response) => {
       data: roomType,
     });
   } catch (error: any) {
+    if (error?.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Room type name already exists",
+      });
+    }
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to create room type",
