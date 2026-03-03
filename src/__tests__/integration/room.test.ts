@@ -28,6 +28,7 @@ const adminUser = {
 };
 
 const baseRoom = {
+	ownerContactNumber: "9800000000",
 	roomTitle: "Cozy Room",
 	description: "A nice room to rent",
 	monthlyPrice: 10000,
@@ -61,21 +62,27 @@ describe("Room Integration Tests", () => {
 	let roomTypeId: string;
 	let adminToken: string;
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		// Create room type
 		await createUser(adminUser);
 		adminToken = await getToken(adminUser.email);
 		const typeRes = await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseRoomType);
-		roomTypeId = typeRes.body.data._id;
+		roomTypeId = typeRes.body.data.id || typeRes.body.data._id;
 
 		// Create users
 		await createUser(ownerUser);
 		await createUser(renterUser);
 		ownerToken = await getToken(ownerUser.email);
 		renterToken = await getToken(renterUser.email);
+
+		const roomRes = await request(app)
+			.post("/api/add-room")
+			.set("Authorization", `Bearer ${ownerToken}`)
+			.send({ ...baseRoom, roomType: roomTypeId, roomTitle: "Seed Room" });
+		roomId = roomRes.body.data.id || roomRes.body.data._id;
 	});
 
 	test("21. Should create a new room", async () => {
@@ -84,7 +91,7 @@ describe("Room Integration Tests", () => {
 			.set("Authorization", `Bearer ${ownerToken}`)
 			.send({ ...baseRoom, roomType: roomTypeId });
 		expect(res.status).toBe(201);
-		roomId = res.body.data._id;
+		roomId = res.body.data.id || res.body.data._id;
 		expect(res.body.data.roomTitle).toBe(baseRoom.roomTitle);
 	});
 
@@ -105,8 +112,8 @@ describe("Room Integration Tests", () => {
 	test("24. Should get room by ID", async () => {
 		const res = await request(app).get(`/api/add-room/${roomId}`);
 		expect(res.status).toBe(200);
-		expect(res.body.data._id).toBe(roomId);
-		expect(res.body.data.roomTitle).toBe(baseRoom.roomTitle);
+		expect(res.body.data.id || res.body.data._id).toBe(roomId);
+		expect(res.body.data.roomTitle).toBe("Seed Room");
 	});
 
 	test("25. Should return 404 for non-existent room", async () => {
@@ -139,7 +146,7 @@ describe("Room Integration Tests", () => {
 			.send({ ...baseRoom, roomType: roomTypeId, roomTitle: "Room to Delete" });
 
 		const res = await request(app)
-			.delete(`/api/add-room/${roomRes.body.data._id}`)
+			.delete(`/api/add-room/${roomRes.body.data.id || roomRes.body.data._id}`)
 			.set("Authorization", `Bearer ${ownerToken}`);
 		expect(res.status).toBe(200);
 	});

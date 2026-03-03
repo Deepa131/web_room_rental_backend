@@ -45,7 +45,7 @@ describe("Admin Integration Tests", () => {
 	let adminToken: string;
 	let userId: string;
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		await createUser(adminUser);
 		adminToken = await getToken(adminUser.email);
 	});

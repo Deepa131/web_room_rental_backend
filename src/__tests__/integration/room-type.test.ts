@@ -38,39 +38,44 @@ describe("Room Type Integration Tests", () => {
 	let adminToken: string;
 	let typeId: string;
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		await createUser(adminUser);
 		adminToken = await getToken(adminUser.email);
+		const seedRes = await request(app)
+			.post("/api/room-types")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ typeName: "Seed Room Type", description: "Seed" });
+		typeId = seedRes.body.data.id || seedRes.body.data._id;
 	});
 
 	test("31. Should create a new room type", async () => {
 		const res = await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseRoomType);
 		expect(res.status).toBe(201);
-		typeId = res.body.data._id;
+		typeId = res.body.data.id || res.body.data._id;
 		expect(res.body.data.typeName).toBe(baseRoomType.typeName);
 	});
 
 	test("32. Should get all room types", async () => {
-		const res = await request(app).get("/api/room-type");
+		const res = await request(app).get("/api/room-types");
 		expect(res.status).toBe(200);
 		expect(Array.isArray(res.body.data)).toBe(true);
 	});
 
 	test("33. Should get room type by ID", async () => {
-		const res = await request(app).get(`/api/room-type/${typeId}`);
+		const res = await request(app).get(`/api/room-types/${typeId}`);
 		expect(res.status).toBe(200);
-		expect(res.body.data._id).toBe(typeId);
-		expect(res.body.data.typeName).toBe(baseRoomType.typeName);
+		expect(res.body.data.id || res.body.data._id).toBe(typeId);
+		expect(res.body.data.typeName).toBe("Seed Room Type");
 	});
 
 	test("34. Should reject room type creation without admin", async () => {
 		await createUser(renterUser);
 		const userToken = await getToken(renterUser.email);
 		const res = await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${userToken}`)
 			.send(baseRoomType);
 		expect(res.status).toBe(403);
@@ -78,7 +83,7 @@ describe("Room Type Integration Tests", () => {
 
 	test("35. Should update room type", async () => {
 		const res = await request(app)
-			.put(`/api/room-type/${typeId}`)
+			.put(`/api/room-types/${typeId}`)
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ typeName: "Updated Type Name" });
 		expect(res.status).toBe(200);
@@ -87,30 +92,30 @@ describe("Room Type Integration Tests", () => {
 
 	test("36. Should return 404 for non-existent room type", async () => {
 		const fakeId = new mongoose.Types.ObjectId();
-		const res = await request(app).get(`/api/room-type/${fakeId}`);
+		const res = await request(app).get(`/api/room-types/${fakeId}`);
 		expect(res.status).toBe(404);
 	});
 
 	test("37. Should delete room type", async () => {
 		const typeRes = await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ typeName: "Temp Type", description: "Temporary" });
 
 		const res = await request(app)
-			.delete(`/api/room-type/${typeRes.body.data._id}`)
+			.delete(`/api/room-types/${typeRes.body.data.id || typeRes.body.data._id}`)
 			.set("Authorization", `Bearer ${adminToken}`);
 		expect(res.status).toBe(200);
 	});
 
 	test("38. Should reject duplicate room type name", async () => {
 		await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ typeName: "Duplicate Type", description: "First" });
 
 		const res = await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ typeName: "Duplicate Type", description: "Second" });
 

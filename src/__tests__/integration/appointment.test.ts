@@ -28,6 +28,7 @@ const adminUser = {
 };
 
 const baseRoom = {
+	ownerContactNumber: "9800000000",
 	roomTitle: "Cozy Room",
 	description: "A nice room to rent",
 	monthlyPrice: 10000,
@@ -66,13 +67,13 @@ describe("Appointment Integration Tests", () => {
 	let adminToken: string;
 	let appointmentId: string;
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		// Setup - create users and room
 		await createUser(adminUser);
 		adminToken = await getToken(adminUser.email);
 
 		const typeRes = await request(app)
-			.post("/api/room-type")
+			.post("/api/room-types")
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseRoomType);
 
@@ -84,18 +85,23 @@ describe("Appointment Integration Tests", () => {
 		const roomRes = await request(app)
 			.post("/api/add-room")
 			.set("Authorization", `Bearer ${ownerToken}`)
-			.send({ ...baseRoom, roomType: typeRes.body.data._id });
-		roomId = roomRes.body.data._id;
+			.send({ ...baseRoom, roomType: typeRes.body.data.id || typeRes.body.data._id });
+		roomId = roomRes.body.data.id || roomRes.body.data._id;
 	});
 
 	test("39. Should book an appointment", async () => {
 		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
 		const res = await request(app)
-			.post("/api/appointment")
+			.post("/api/appointments/book")
 			.set("Authorization", `Bearer ${renterToken}`)
 			.send({
 				roomId,
 				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
 				appointmentDate: new Date(),
 				appointmentTime: "10:00 AM",
 			});
@@ -106,11 +112,16 @@ describe("Appointment Integration Tests", () => {
 
 	test("40. Should reject appointment without token", async () => {
 		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
 		const res = await request(app)
-			.post("/api/appointment")
+			.post("/api/appointments/book")
 			.send({
 				roomId,
 				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
 				appointmentDate: new Date(),
 				appointmentTime: "10:00 AM",
 			});
@@ -118,39 +129,79 @@ describe("Appointment Integration Tests", () => {
 	});
 
 	test("41. Should get all appointments", async () => {
+		const ownerId = await getUserId(ownerUser.email);
 		const res = await request(app)
-			.get("/api/appointment")
+			.get(`/api/appointments/owner/${ownerId}`)
 			.set("Authorization", `Bearer ${ownerToken}`);
 		expect(res.status).toBe(200);
 		expect(Array.isArray(res.body.data)).toBe(true);
 	});
 
 	test("42. Should get appointment by ID", async () => {
+		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
+		const appointmentRes = await request(app)
+			.post("/api/appointments/book")
+			.set("Authorization", `Bearer ${renterToken}`)
+			.send({
+				roomId,
+				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
+				appointmentDate: new Date(),
+				appointmentTime: "10:30 AM",
+			});
+		appointmentId = appointmentRes.body.data._id;
+
 		const res = await request(app)
-			.get(`/api/appointment/${appointmentId}`)
+			.get(`/api/appointments/${appointmentId}`)
 			.set("Authorization", `Bearer ${renterToken}`);
 		expect(res.status).toBe(200);
 		expect(res.body.data._id).toBe(appointmentId);
 	});
 
 	test("43. Should update appointment status", async () => {
+		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
+		const appointmentRes = await request(app)
+			.post("/api/appointments/book")
+			.set("Authorization", `Bearer ${renterToken}`)
+			.send({
+				roomId,
+				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
+				appointmentDate: new Date(),
+				appointmentTime: "10:45 AM",
+			});
+		appointmentId = appointmentRes.body.data._id;
+
 		const res = await request(app)
-			.put(`/api/appointment/${appointmentId}`)
+			.put(`/api/appointments/${appointmentId}/status`)
 			.set("Authorization", `Bearer ${ownerToken}`)
-			.send({ status: "accepted" });
+			.send({ status: "confirmed" });
 		expect(res.status).toBe(200);
-		expect(res.body.data.status).toBe("accepted");
+		expect(res.body.data.status).toBe("confirmed");
 	});
 
 	test("44. Should reject appointment for non-existent room", async () => {
 		const fakeId = new mongoose.Types.ObjectId();
 		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
 		const res = await request(app)
-			.post("/api/appointment")
+			.post("/api/appointments/book")
 			.set("Authorization", `Bearer ${renterToken}`)
 			.send({
 				roomId: fakeId,
 				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
 				appointmentDate: new Date(),
 				appointmentTime: "10:00 AM",
 			});
@@ -159,25 +210,31 @@ describe("Appointment Integration Tests", () => {
 
 	test("45. Should cancel appointment", async () => {
 		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
 		const appointmentRes = await request(app)
-			.post("/api/appointment")
+			.post("/api/appointments/book")
 			.set("Authorization", `Bearer ${renterToken}`)
 			.send({
 				roomId,
 				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
 				appointmentDate: new Date(),
 				appointmentTime: "11:00 AM",
 			});
 
 		const res = await request(app)
-			.delete(`/api/appointment/${appointmentRes.body.data._id}`)
+			.delete(`/api/appointments/${appointmentRes.body.data._id}`)
 			.set("Authorization", `Bearer ${renterToken}`);
 		expect(res.status).toBe(200);
 	});
 
 	test("46. Should get owner's appointments only", async () => {
+		const ownerId = await getUserId(ownerUser.email);
 		const res = await request(app)
-			.get("/api/appointment?role=owner")
+			.get(`/api/appointments/owner/${ownerId}`)
 			.set("Authorization", `Bearer ${ownerToken}`);
 		expect(res.status).toBe(200);
 		expect(Array.isArray(res.body.data)).toBe(true);
