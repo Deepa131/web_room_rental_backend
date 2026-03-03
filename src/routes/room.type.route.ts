@@ -6,14 +6,14 @@ import {
   updateRoomType,
   deleteRoomType,
 } from "../controller/room.type.controller";
-import { authorizedMiddleware } from "../middleware/auth.middleware";
+import { adminMiddleware, authorizedMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
 
 router.get("/", getAllRoomTypes);
-router.post("/", authorizedMiddleware, createRoomType);
+router.post("/", authorizedMiddleware, adminMiddleware, createRoomType);
 router.get("/:id", getRoomTypeById);
-router.put("/:id", authorizedMiddleware, updateRoomType);
-router.delete("/:id", authorizedMiddleware, deleteRoomType);
+router.put("/:id", authorizedMiddleware, adminMiddleware, updateRoomType);
+router.delete("/:id", authorizedMiddleware, adminMiddleware, deleteRoomType);
 
 export default router;
