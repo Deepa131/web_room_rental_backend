@@ -13,8 +13,6 @@ import roomTypeRoutes from './routes/room.type.route';
 import { appointmentRouter } from './routes/appointment.route';
 
 dotenv.config();
-// Load environment variables before using them
-console.log(process.env.PORT);
 
 const app: Application = express();
 
@@ -40,7 +38,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // API ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/rooms', roomRoutes);
+app.use('/api/add-room', roomRoutes);
 app.use('/api/room-types', roomTypeRoutes);
 app.use('/api/appointments', appointmentRouter);
 
