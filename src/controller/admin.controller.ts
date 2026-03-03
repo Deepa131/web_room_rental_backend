@@ -2,6 +2,9 @@ import { AdminService } from "../services/admin.service";
 import { CreateUserDTO } from "../dtos/user.dto";
 import { Request, Response } from "express";
 import z from "zod";
+import { UserModel } from "../models/user.model";
+import AddRoom from "../models/add.room.model";
+import { AppointmentModel } from "../models/appointment.model";
 
 const adminService = new AdminService();
 
@@ -188,6 +191,30 @@ export class AdminController {
       });
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async getStats(_req: Request, res: Response) {
+    try {
+      const [totalUsers, totalRooms, totalAppointments] = await Promise.all([
+        UserModel.countDocuments(),
+        AddRoom.countDocuments(),
+        AppointmentModel.countDocuments(),
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalUsers,
+          totalRooms,
+          totalAppointments,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json({
         success: false,
         message: error.message || "Internal Server Error",
       });
