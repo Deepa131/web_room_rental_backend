@@ -18,7 +18,7 @@ export class UserService {
     async createUser(data: CreateUserDTO) {
         const emailCheck = await userRepository.getUserByEmail(data.email.toLowerCase());
         if (emailCheck) {
-            throw new HttpError(403, "Email already in use");
+            throw new HttpError(400, "Email already in use");
         }
         
         // Password will be hashed by the pre-save hook in the model
@@ -29,7 +29,7 @@ export class UserService {
     async loginUser(data: LoginUserDTO) {
         const user = await userRepository.getUserByEmail(data.email.toLowerCase());
         if (!user) {
-            throw new HttpError(404, "User not found");
+            throw new HttpError(401, "Invalid credentials");
         }
         // compare password
         const validPassword = await bcryptjs.compare(data.password, user.password);
