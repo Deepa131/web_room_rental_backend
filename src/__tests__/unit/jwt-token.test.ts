@@ -23,4 +23,37 @@ describe("JWT Token Unit Tests", () => {
 			jwt.verify(token, "wrong-secret");
 		}).toThrow();
 	});
+
+	test("4. Should handle token expiration", () => {
+		const token = jwt.sign(payload, secret, { expiresIn: "0s" });
+		expect(() => {
+			jwt.verify(token, secret);
+		}).toThrow();
+	});
+
+	test("5. Should generate token with custom expiration", () => {
+		const token = jwt.sign(payload, secret, { expiresIn: "7d" });
+		expect(token).toBeDefined();
+		expect(typeof token).toBe("string");
+	});
+
+	test("6. Should decode token without verification", () => {
+		const token = jwt.sign(payload, secret, { expiresIn: "24h" });
+		const decoded = jwt.decode(token);
+		expect(decoded).toBeDefined();
+		expect((decoded as any).userId).toBe("123");
+	});
+
+	test("7. Should reject malformed token", () => {
+		expect(() => {
+			jwt.verify("malformed.token", secret);
+		}).toThrow();
+	});
+
+	test("8. Should handle different algorithms", () => {
+		const token = jwt.sign(payload, secret, { algorithm: "HS256" });
+		expect(token).toBeDefined();
+		const decoded = jwt.verify(token, secret);
+		expect(decoded).toBeDefined();
+	});
 });

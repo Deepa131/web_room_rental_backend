@@ -239,4 +239,105 @@ describe("Appointment Integration Tests", () => {
 		expect(res.status).toBe(200);
 		expect(Array.isArray(res.body.data)).toBe(true);
 	});
+
+	test("47. Should handle concurrent appointment bookings", async () => {
+		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
+
+		const [res1, res2] = await Promise.all([
+			request(app)
+				.post("/api/appointments/book")
+				.set("Authorization", `Bearer ${renterToken}`)
+				.send({
+					roomId,
+					ownerId,
+					renterId,
+					renterName: renterUser.fullName,
+					renterEmail: renterUser.email,
+					renterPhone: "9800000001",
+					appointmentDate: new Date(),
+					appointmentTime: "2:00 PM",
+				}),
+			request(app)
+				.post("/api/appointments/book")
+				.set("Authorization", `Bearer ${renterToken}`)
+				.send({
+					roomId,
+					ownerId,
+					renterId,
+					renterName: renterUser.fullName,
+					renterEmail: renterUser.email,
+					renterPhone: "9800000001",
+					appointmentDate: new Date(),
+					appointmentTime: "2:15 PM",
+				}),
+		]);
+
+		expect([res1.status, res2.status]).toContain(201);
+	});
+
+	test("48. Should filter appointments by status", async () => {
+		const ownerId = await getUserId(ownerUser.email);
+		const res = await request(app)
+			.get(`/api/appointments/owner/${ownerId}?status=pending`)
+			.set("Authorization", `Bearer ${ownerToken}`);
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
+
+	test("49. Should get appointment details with room info", async () => {
+		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
+
+		const appointmentRes = await request(app)
+			.post("/api/appointments/book")
+			.set("Authorization", `Bearer ${renterToken}`)
+			.send({
+				roomId,
+				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
+				appointmentDate: new Date(),
+				appointmentTime: "3:00 PM",
+			});
+
+		const appointmentId = appointmentRes.body.data._id;
+
+		const res = await request(app)
+			.get(`/api/appointments/${appointmentId}`)
+			.set("Authorization", `Bearer ${renterToken}`);
+		expect(res.status).toBe(200);
+		expect(res.body.data).toHaveProperty("roomId");
+		expect(res.body.data).toHaveProperty("ownerId");
+		expect(res.body.data).toHaveProperty("status");
+	});
+
+	test("50. Should allow owner to reject appointment", async () => {
+		const ownerId = await getUserId(ownerUser.email);
+		const renterId = await getUserId(renterUser.email);
+
+		const appointmentRes = await request(app)
+			.post("/api/appointments/book")
+			.set("Authorization", `Bearer ${renterToken}`)
+			.send({
+				roomId,
+				ownerId,
+				renterId,
+				renterName: renterUser.fullName,
+				renterEmail: renterUser.email,
+				renterPhone: "9800000001",
+				appointmentDate: new Date(),
+				appointmentTime: "4:00 PM",
+			});
+
+		const appointmentId = appointmentRes.body.data._id;
+
+		const res = await request(app)
+			.put(`/api/appointments/${appointmentId}/status`)
+			.set("Authorization", `Bearer ${ownerToken}`)
+			.send({ status: "rejected" });
+		expect(res.status).toBe(200);
+	});
 });

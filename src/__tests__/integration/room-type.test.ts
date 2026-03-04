@@ -121,4 +121,24 @@ describe("Room Type Integration Tests", () => {
 
 		expect(res.status).toBe(400);
 	});
+
+	test("39. Should paginate room types", async () => {
+		const res = await request(app).get("/api/room-types?page=1&limit=5");
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
+
+	test("40. Should search room types by name", async () => {
+		const res = await request(app).get("/api/room-types?search=Room");
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
+
+	test("41. Should handle room type with special characters", async () => {
+		const res = await request(app)
+			.post("/api/room-types")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ typeName: "Studio-Apt & Suite", description: "Special types" });
+		expect([201, 400]).toContain(res.status);
+	});
 });

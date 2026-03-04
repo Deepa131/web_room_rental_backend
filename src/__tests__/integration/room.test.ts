@@ -162,4 +162,44 @@ describe("Room Integration Tests", () => {
 		expect(res.status).toBe(200);
 		expect(Array.isArray(res.body.data)).toBe(true);
 	});
+
+	test("31. Should search rooms by location and price", async () => {
+		const res = await request(app).get(
+			"/api/add-room?location=Kathmandu&minPrice=5000&maxPrice=20000"
+		);
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
+
+	test("32. Should search rooms by bedrooms", async () => {
+		const res = await request(app).get("/api/add-room?bedrooms=1");
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
+
+	test("33. Should update room as owner only", async () => {
+		const res = await request(app)
+			.put(`/api/add-room/${roomId}`)
+			.set("Authorization", `Bearer ${ownerToken}`)
+			.send({ monthlyPrice: 12000 });
+		expect(res.status).toBe(200);
+		expect(res.body.data.monthlyPrice).toBe(12000);
+	});
+
+	test("34. Should mark room as unavailable", async () => {
+		const res = await request(app)
+			.put(`/api/add-room/${roomId}`)
+			.set("Authorization", `Bearer ${ownerToken}`)
+			.send({ isAvailable: false });
+		expect(res.status).toBe(200);
+		expect(res.body.data.isAvailable).toBe(false);
+	});
+
+	test("35. Should get room with all details", async () => {
+		const res = await request(app).get(`/api/add-room/${roomId}`);
+		expect(res.status).toBe(200);
+		expect(res.body.data).toHaveProperty("roomTitle");
+		expect(res.body.data).toHaveProperty("description");
+		expect(res.body.data).toHaveProperty("monthlyPrice");
+	});
 });

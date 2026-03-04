@@ -128,4 +128,44 @@ describe("Admin Integration Tests", () => {
 			.set("Authorization", `Bearer ${adminToken}`);
 		expect(res.status).toBe(200);
 	});
+
+	test("21. Should get paginated users list", async () => {
+		const res = await request(app)
+			.get("/api/admin/users?page=1&limit=10")
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
+
+	test("22. Should change user role as admin", async () => {
+		const userRes = await createUser({
+			email: "rolechange@gmail.com",
+			role: "renter"
+		});
+		const userId = userRes.body.data._id;
+
+		const res = await request(app)
+			.put(`/api/admin/users/${userId}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ role: "owner" });
+		expect(res.status).toBe(200);
+	});
+
+	test("23. Should prevent non-admin from accessing admin stats", async () => {
+		await createUser({ email: "renter@gmail.com", role: "renter" });
+		const renterToken = await getToken("renter@gmail.com");
+
+		const res = await request(app)
+			.get("/api/admin/stats")
+			.set("Authorization", `Bearer ${renterToken}`);
+		expect(res.status).toBe(403);
+	});
+
+	test("24. Should search users in admin panel", async () => {
+		const res = await request(app)
+			.get("/api/admin/users?search=Test")
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(res.status).toBe(200);
+		expect(Array.isArray(res.body.data)).toBe(true);
+	});
 });
