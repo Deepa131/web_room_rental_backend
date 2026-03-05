@@ -68,7 +68,6 @@ export class AppointmentController {
                 data: appointment,
             });
         } catch (error: any) {
-            console.error('Error booking appointment:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to book appointment',
@@ -111,7 +110,6 @@ export class AppointmentController {
                 data: appointmentsWithRooms,
             });
         } catch (error: any) {
-            console.error('Error fetching owner appointments:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to fetch appointments',
@@ -154,7 +152,6 @@ export class AppointmentController {
                 data: appointmentsWithRooms,
             });
         } catch (error: any) {
-            console.error('Error fetching renter appointments:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to fetch appointments',
@@ -180,7 +177,6 @@ export class AppointmentController {
                 data: appointment,
             });
         } catch (error: any) {
-            console.error('Error fetching appointment:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to fetch appointment',
@@ -219,7 +215,6 @@ export class AppointmentController {
                 data: appointment,
             });
         } catch (error: any) {
-            console.error('Error updating appointment status:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to update appointment',
@@ -245,7 +240,6 @@ export class AppointmentController {
                 message: 'Appointment deleted successfully',
             });
         } catch (error: any) {
-            console.error('Error deleting appointment:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to delete appointment',
@@ -292,7 +286,6 @@ export class AppointmentController {
                 data: appointment,
             });
         } catch (error: any) {
-            console.error('Error updating appointment:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Failed to update appointment',
