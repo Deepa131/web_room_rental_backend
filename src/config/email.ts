@@ -1,7 +1,4 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "").trim();
 const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
