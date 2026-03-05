@@ -186,7 +186,6 @@ export class AuthController {
         message: result.message,
       });
     } catch (error: any) {
-      console.error("Forgot password error:", error);
       return res.status(error.statusCode ?? 500).json({
         success: false,
         message: error.message || "Internal Server Error",
@@ -220,7 +219,6 @@ export class AuthController {
         message: "Password reset successful",
       });
     } catch (error: any) {
-      console.error("Reset password error:", error);
       return res.status(error.statusCode ?? 500).json({
         success: false,
         message: error.message || "Internal Server Error",
